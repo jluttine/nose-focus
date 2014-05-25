@@ -121,14 +121,17 @@ class Lineage(object):
             focused = False
             lineage = self.determine(thing)
             if not self.ignored(thing):
-                if lineage and any(self.focused_all(kls) for kls in lineage):
+                if lineage and any(self.focused_all(kls) for kls in [thing] + lineage):
                     focused = True
                 else:
                     parent = None
                     if lineage:
                         parent, lineage = lineage[0], lineage[1:]
 
-                    if getattr(thing, "nose_focus", None) or (parent and getattr(parent, "nose_focus", None)):
+                    is_class = isinstance(thing, six.class_types)
+                    is_not_class = not is_class
+                    parent_is_not_class = not parent or not isinstance(parent, six.class_types)
+                    if getattr(thing, "nose_focus", None) or (((is_class and parent_is_not_class) or is_not_class) and getattr(parent, "nose_focus", None)):
                         focused = True
             self._focused[thing] = focused
         return self._focused[thing]
