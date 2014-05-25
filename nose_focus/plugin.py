@@ -3,6 +3,7 @@ from six.moves import builtins
 import optparse
 import inspect
 import types
+import nose
 import sys
 import six
 
@@ -131,7 +132,7 @@ class Lineage(object):
                     is_class = isinstance(thing, six.class_types)
                     is_not_class = not is_class
                     parent_is_not_class = not parent or not isinstance(parent, six.class_types)
-                    if getattr(thing, "nose_focus", None) or (((is_class and parent_is_not_class) or is_not_class) and getattr(parent, "nose_focus", None)):
+                    if getattr(thing, "nose_focus", None) or (((is_class and parent_is_not_class) or is_not_class) and parent and self.focused(parent)):
                         focused = True
             self._focused[thing] = focused
         return self._focused[thing]
@@ -141,21 +142,34 @@ class Plugin(Plugin):
 
     def __init__(self, *args, **kwargs):
         self.lineage = Lineage()
+        self.current_module = None
         super(Plugin, self).__init__(*args, **kwargs)
 
-    def wantMethod(self, method):
+    def wantModule(self, module):
+        self.current_module = module
+        return
+
+    def wantThing(self, thing):
         """Only want methods that have nose_focus set to a truthy value"""
         if not self.enabled:
-            return method
-
-        if self.lineage.ignored(method):
             return
 
-        if self.just_ignore:
-            return method
+        if type(thing) is nose.pyversion.UnboundMethod:
+            thing = thing._func
 
-        if self.lineage.focused(method):
-            return method
+        if self.lineage.ignored(thing):
+            return False
+
+        if self.just_ignore:
+            return
+
+        if inspect.getmodule(thing) is self.current_module and self.lineage.focused(thing):
+            return True
+        else:
+            return False
+
+    wantMethod = wantThing
+    wantFunction = wantThing
 
     def options(self, parser, env={}):
         super(Plugin, self).options(parser, env)
