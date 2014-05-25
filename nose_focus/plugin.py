@@ -1,24 +1,28 @@
 from nose.plugins import Plugin
-import __builtin__
+from six.moves import builtins
 import optparse
 import inspect
 import types
 import sys
+import six
 
 class Lineage(object):
     """Knows how to get the lineage of things"""
     def __init__(self):
         self.lineage = {}
-        self.ignored = {}
-        self.focused = {}
-        self.focused_all = {}
+        self._ignored = {}
+        self._focused = {}
+        self._focused_all = {}
 
     def determine(self, thing):
         """
         Get all the classes in the lineage of this method
         Memoize the results for each method and class as we go along
         """
-        # from nose.tools import set_trace; set_trace()
+        unbound_method_type = types.MethodType
+        if six.PY2:
+            unbound_method_type = types.UnboundMethodType
+
         if repr(thing) not in self.lineage:
             lineage = []
             def add(thing):
@@ -39,27 +43,39 @@ class Lineage(object):
                     if parent in sys.modules:
                         add(sys.modules[parent])
 
-            elif type(thing) in (types.UnboundMethodType, types.MethodType):
-                parent = None
-                if hasattr(thing, "im_class"):
-                    parent = thing.im_class
-
-                if parent:
-                    add(parent)
             else:
-                module = getattr(thing, "__module__", None)
-                if isinstance(module, basestring):
-                    module = sys.modules.get(module)
+                is_method = type(thing) is types.FunctionType and getattr(thing, "__qualname__", "").count(".") > 0
+                if is_method or type(thing) in (unbound_method_type, types.MethodType):
+                    parent = None
+                    if is_method:
+                        # Damn you python3 and your inability to know if a Function comes from a class
+                        parent = getattr(sys.modules[thing.__module__], thing.__qualname__.split(".")[0])
+                    if hasattr(thing, "im_class"):
+                        parent = thing.im_class
+                    elif hasattr(thing, "__self__"):
+                        parent = thing.__self__.__class__
 
-                if module and module is not __builtin__:
-                    add(module)
+                    for ancestor in self.getmro(parent):
+                        if thing.__name__ in ancestor.__dict__:
+                            parent = ancestor
+                            break
 
-                if type(thing) is not types.FunctionType:
-                    klses = self.getmro(thing)
+                    if parent:
+                        add(parent)
+                else:
+                    module = getattr(thing, "__module__", None)
+                    if isinstance(module, six.string_types):
+                        module = sys.modules.get(module)
 
-                    for kls in klses:
-                        if kls and kls not in (thing, type, object):
-                            add(kls)
+                    if module and module is not builtins:
+                        add(module)
+
+                    if type(thing) is not types.FunctionType:
+                        klses = self.getmro(thing)
+
+                        for kls in klses:
+                            if kls and kls not in (thing, type, object):
+                                add(kls)
 
             self.lineage[repr(thing)] = lineage
         return self.lineage[repr(thing)]
@@ -79,39 +95,43 @@ class Lineage(object):
 
     def ignored(self, thing):
         """Ignored is thing or anything in lineage with nose_ignore set to true"""
-        if thing not in self.ignored:
-            self.ignored[thing] = False
+        if thing not in self._ignored:
+            ignored = False
             lineage = self.determine(thing)
-            if getattr(lineage[0], "nose_focus_ignore", None) or (lineage and any(self.ignored(kls) for kls in lineage)):
-                self.ignored[thing] = True
-        return self.ignored[thing]
+            if getattr(thing, "nose_focus_ignore", None) or (lineage and any(self.ignored(kls) for kls in lineage)):
+                ignored = True
+
+            self._ignored[thing] = ignored
+        return self._ignored[thing]
 
     def focused_all(self, thing):
         """Focused all is anything not ignored with the thing, or anything in it's lineage having focus_all set"""
-        if thing not in self.focused_all:
-            self.focused_all[thing] = False
+        if thing not in self._focused_all:
+            focused_all = False
             lineage = self.determine(thing)
             if not self.ignored(thing):
                 if getattr(thing, "nose_focus_all", None) or (lineage and any(self.focused_all(kls) for kls in lineage)):
-                    self.focused_all[thing] = True
-        return self.focused_all[thing]
+                    focused_all = True
+            self._focused_all[thing] = focused_all
+        return self._focused_all[thing]
 
     def focused(self, thing):
         """Focused is not ignored, any parents focused due to focus_all logic, or this thing or parent has nose_focus set to Truthy"""
-        if thing not in self.focused:
-            self.focused[thing] = False
+        if thing not in self._focused:
+            focused = False
             lineage = self.determine(thing)
             if not self.ignored(thing):
                 if lineage and any(self.focused_all(kls) for kls in lineage):
-                    self.focused[thing] = True
+                    focused = True
                 else:
                     parent = None
                     if lineage:
                         parent, lineage = lineage[0], lineage[1:]
 
                     if getattr(thing, "nose_focus", None) or (parent and getattr(parent, "nose_focus", None)):
-                        self.focused[thing] = True
-        return self.focused[thing]
+                        focused = True
+            self._focused[thing] = focused
+        return self._focused[thing]
 
 class Plugin(Plugin):
     name = "nose_focus"

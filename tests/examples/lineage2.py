@@ -1,26 +1,51 @@
-from tests.examples.lineage import AClass, ASubClass, ASubMixin
+from tests.examples.lineage import AClass, ASubMixin
+import six
 
-class BClass(object):
+class BSubClass(AClass):
+    def onlyBSubClass(self):
+        pass
+
+class BSubClassOverride(AClass):
     def aMethod(self):
         pass
 
-    def onlyBClass(self):
+    def onlyBSubClassOverride(self):
         pass
 
-class BSubClassWithA(AClass):
+class BGrandChildClass(BSubClass):
+    def onlyBGrandChildClass(self):
+        pass
+
+class BGrandChildClassOverride(BSubClass):
     def aMethod(self):
         pass
 
-    def onlyBSubClassWithA(self):
+    def onlyBGrandChildClassOverride(self):
         pass
 
-class BGrandClassWithA(ASubClass):
-    def aMethod(self):
-        pass
+if six.PY3:
+    # With object as well, this become mro errors in python3
+    # Because old style classes are now new style classes
 
-    def onlyBGrandClassWithA(self):
-        pass
+    class BClassWithASubMixin(ASubMixin):
+        def onlyBClassWithASubMixin(self):
+            pass
 
-class BClassWithASubMixin(object, ASubMixin):
-    def aMethod(self):
-        pass
+    class BClassWithASubMixinOverride(ASubMixin):
+        def aMethod(self):
+            pass
+
+        def onlyBClassWithASubMixinOverride(self):
+            pass
+else:
+    class BClassWithASubMixin(object, ASubMixin):
+        def onlyBClassWithASubMixin(self):
+            pass
+
+    class BClassWithASubMixinOverride(object, ASubMixin):
+        def aMethod(self):
+            pass
+
+        def onlyBClassWithASubMixinOverride(self):
+            pass
+

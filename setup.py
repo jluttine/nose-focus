@@ -6,6 +6,10 @@ setup(
     , packages = ['nose_focus'] + ['nose_focus.%s' % pkg for pkg in find_packages('nose_focus')]
     , include_package_data = True
 
+     , install_requires =
+       [ 'six'
+       ]
+
     , extras_require =
       { "tests":
         [ "nose"
