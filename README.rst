@@ -103,13 +103,13 @@ nose_focus.focus_ignore(thing)
 How it works
 ------------
 
-The plugin uses the ``wantMethod`` hook to only let through methods that we want
-to focus on.
+The plugin uses several ``want*`` hooks on a nose plugin  to only let
+through methods that we want to focus on.
 
-A method is is ``focused`` if it or it's parent class has ``nose_focus`` set to
+A method is ``focused`` if it or it's parent class has ``nose_focus`` set to
 a Truthy value or if any class in the lineage of parent classes has
-``nose_focus_all`` set to a Truthy value and nothing has ``nose_focus_ignore``
-set to a Truthy value.
+``nose_focus_all`` set to a Truthy value and nothing in the lineage
+has ``nose_focus_ignore`` set to a Truthy value.
 
 Installation
 ------------
@@ -127,14 +127,18 @@ Or if you're developing it:
     pip install -e .
     pip install -e ".[tests]"
 
-How it worksk
-
 Tests
 -----
 
-To run the tests in this project, just use the helpful script::
+To run the tests in this project, just use the helpful script:
 
 .. code-block:: bash
 
     ./test.sh
+
+Or run tox:
+
+.. code-block:: bash
+
+    tox
 
