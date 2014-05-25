@@ -4,6 +4,9 @@ Nose Focus
 This provides a nice little decorator and a nose-tests switch to make nose only
 run the tests that you are focusing on right now.
 
+.. image:: https://travis-ci.org/delfick/nose-focus.png?branch=master
+    :target: https://travis-ci.org/delfick/nose-focus
+
 Usage
 -----
 
