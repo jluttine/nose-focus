@@ -190,7 +190,7 @@ class Plugin(Plugin):
 
     def configure(self, options, conf):
         super(Plugin, self).configure(options, conf)
-        if options.enabled and options.just_ignore:
+        if options.only_focus and options.just_ignore:
             raise optparse.OptionError("Please specify only one --with-focus or --without-ignored", "--with-focus")
         self.enabled = options.only_focus or options.just_ignore
         self.just_ignore = options.just_ignore
