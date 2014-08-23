@@ -1,2 +1,2 @@
 #!/bin/bash
-nosetests --with-noy --exclude-dir tests/examples $@
+nosetests --with-noy --exclude-path tests/examples $@
