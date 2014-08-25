@@ -14,7 +14,7 @@ setup(
       { "tests":
         [ "nose"
         , "noseOfYeti"
-        , "nose-pattern-exclude"
+        , "nose-pattern-exclude>=0.1.3"
         ]
       }
 
