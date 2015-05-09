@@ -1,11 +1,14 @@
 from nose.plugins import Plugin
 from six.moves import builtins
+from fnmatch import fnmatch
 import optparse
+import logging
 import inspect
 import types
 import nose
 import sys
 import six
+import os
 
 class Lineage(object):
     """Knows how to get the lineage of things"""
@@ -151,7 +154,7 @@ class Plugin(Plugin):
 
     def wantThing(self, thing):
         """Only want methods that have nose_focus set to a truthy value"""
-        if not self.enabled:
+        if not self.enabled or (not self.only_focus and not self.just_ignore):
             return
 
         if type(thing) is nose.pyversion.UnboundMethod:
@@ -171,6 +174,13 @@ class Plugin(Plugin):
     wantMethod = wantThing
     wantFunction = wantThing
 
+    def wantFile(self, filename):
+        """Ignore directories if we only want to include particular directories"""
+        basename = os.path.basename(filename)
+        if self.only_include_filename:
+            if not any(fnmatch(basename, pattern) for pattern in self.only_include_filename):
+                return False
+
     def options(self, parser, env={}):
         super(Plugin, self).options(parser, env)
 
@@ -188,10 +198,18 @@ class Plugin(Plugin):
             , default = False
             )
 
+        parser.add_option("--only-include-filename"
+            , help   = 'Glob of filenames to include'
+            , action = "append"
+            )
+
     def configure(self, options, conf):
         super(Plugin, self).configure(options, conf)
         if options.only_focus and options.just_ignore:
             raise optparse.OptionError("Please specify only one --with-focus or --without-ignored", "--with-focus")
-        self.enabled = options.only_focus or options.just_ignore
+        self.enabled = options.only_focus or options.just_ignore or options.only_include_filename
+        self.only_focus = options.only_focus
         self.just_ignore = options.just_ignore
+        self.only_include_filename = options.only_include_filename
+        self.logger = logging.getLogger('{0}.{1}'.format(__name__, type(self).__name__))
 
