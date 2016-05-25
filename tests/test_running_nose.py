@@ -16,7 +16,7 @@ this_folder = os.path.abspath(os.path.dirname(__file__))
 test_folder = os.path.join(this_folder, "examples", "test_examples")
 
 regexes = {
-      "test_result": re.compile(r'((?P<name>[^ ]+) \((?P<home>[^\)]+)\)|(?P<full_test>[^ ]+)) ... ok')
+      "test_result": re.compile(r'((?P<name>[^ ]+) \((?P<home>[^\)]+)\)|(?P<full_test>[^ ]+))( ... )?ok')
     }
 
 describe TestCase, "Running nose":
