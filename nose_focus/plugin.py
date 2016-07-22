@@ -1,3 +1,4 @@
+from nose.selector import Selector
 from nose.plugins import Plugin
 from six.moves import builtins
 from fnmatch import fnmatch
@@ -97,6 +98,11 @@ class Lineage(object):
 
         return klses
 
+    def unmatched(self, thing):
+        if hasattr(self, "selector") and hasattr(thing, "__name__"):
+            if not self.selector.matches(thing.__name__):
+                return False
+
     def ignored(self, thing):
         """Ignored is thing or anything in lineage with nose_ignore set to true"""
         if thing not in self._ignored:
@@ -160,6 +166,9 @@ class Plugin(Plugin):
         if type(thing) is nose.pyversion.UnboundMethod:
             thing = thing._func
 
+        if self.lineage.unmatched(thing) is False:
+            return False
+
         if self.lineage.ignored(thing):
             return False
 
@@ -208,6 +217,7 @@ class Plugin(Plugin):
         if options.only_focus and options.just_ignore:
             raise optparse.OptionError("Please specify only one --with-focus or --without-ignored", "--with-focus")
         self.enabled = options.only_focus or options.just_ignore or options.only_include_filename
+        self.lineage.selector = Selector(conf)
         self.only_focus = options.only_focus
         self.just_ignore = options.just_ignore
         self.only_include_filename = options.only_include_filename

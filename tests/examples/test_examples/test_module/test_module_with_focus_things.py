@@ -6,6 +6,9 @@ class TestFocusOneLayer(TestCase):
     def test_a_test(self):
         assert True
 
+    def should_not_be_run(self):
+        assert False
+
 class TestFocusOneLayerChild(TestFocusOneLayer):
     def test_b_test(self):
         assert True
