@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
       name = "nose_focus"
-    , version = "0.1.2"
+    , version = "0.1.3"
     , packages = ['nose_focus'] + ['nose_focus.%s' % pkg for pkg in find_packages('nose_focus')]
     , include_package_data = True
 
