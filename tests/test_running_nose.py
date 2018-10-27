@@ -1,5 +1,3 @@
-# coding: spec
-
 from __future__ import print_function
 
 from unittest import TestCase
@@ -243,4 +241,3 @@ describe TestCase, "Running nose":
             ]
 
         self.assert_expected_focus(expected, "--with-focus")
-

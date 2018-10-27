@@ -1,5 +1,3 @@
-# coding: spec
-
 from noseOfYeti.tokeniser.support import noy_sup_setUp
 from nose_focus.plugin import Lineage
 from unittest import TestCase
@@ -174,4 +172,3 @@ describe TestCase, "Finding lineage":
                 self.assert_finds(lineage.AClassWithMultipleMixins, ["onlyAClassWithMultipleMixins"]
                     , [lineage.AClassWithMultipleMixins, tests.examples.lineage, tests.examples, tests, lineage.ASubMixin, lineage.AMixin, lineage.BMixin]
                     )
-

@@ -1,5 +1,3 @@
-# coding: spec
-
 from nose_focus.plugin import Lineage
 
 from noseOfYeti.tokeniser.support import noy_sup_setUp
@@ -143,4 +141,3 @@ describe "Determining focus":
     it "is not set to focused just because parent class is focused":
         assert not self.lineage.focused(non_focus_module.TestFocusClassChild)
         assert not self.lineage.focused(non_focus_module.TestFocusClassChild.test_stuff)
-
